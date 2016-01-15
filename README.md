@@ -2,9 +2,10 @@
 C# OOP implementation of Fiat Shamir Identification Scheme
 
 Library includes:
-    -KeyGen class
-    -Proover class
-    -Verifier class
+
+	-KeyGen class
+	-Proover class
+	-Verifier class
 
 The library support multithread key creation
 
