@@ -7,7 +7,7 @@ Library includes:
 	-Proover class
 	-Verifier class
 
-The library support multithread key creation
+The library supports multithread key creation
 
 *Random Number Generator*
 
