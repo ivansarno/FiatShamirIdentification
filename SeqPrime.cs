@@ -124,7 +124,12 @@ namespace FiatShamirIdentification
         /// <returns>true if number is prime</returns>
         public bool IsPrime(ref BigInteger number)
         {
-            return (number == 2) || (number > 2 && MRtest(ref number));
+            if (number == 2)
+                return true;
+            if ((number & 1) == 0)
+                return false;
+
+            return number > 2 && MRtest(ref number);
         }
 
         /// <summary>
