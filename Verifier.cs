@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.1.0
+//version V.2.0 alpha
 
 using System;
 using System.Numerics;
@@ -23,7 +23,7 @@ using System.Numerics;
 namespace FiatShamirIdentification
 {
     /// <summary>
-    /// Object that checks whether an object Proover has the private key 
+    /// Object that checks whether an object Proover has the private key
     /// that is associated with his public key.
     /// Single iteration of protocol have error ratio = 1/2.
     /// </summary>
@@ -49,7 +49,7 @@ namespace FiatShamirIdentification
             _synch = false;
         }
 
-        
+
         /// <summary>
         /// Take the result of Proover.Stap1() and return a random choice to send to Proover.
         /// </summary>
@@ -67,7 +67,7 @@ namespace FiatShamirIdentification
             return _choice;
         }
 
-        
+
         /// <summary>
         /// Take the result of Proover.stap2() and return the state of identification.
         /// </summary>
@@ -91,7 +91,7 @@ namespace FiatShamirIdentification
             return _state;
         }
 
-        
+
         /// <summary>
         /// Return the state of identification in this iteration.
         /// Single iteration of protocol have error ratio = 1/2.

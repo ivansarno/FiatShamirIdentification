@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.1.0
+//version V.2.0 alpha
 
 using System;
 using System.Numerics;
@@ -24,7 +24,7 @@ using System.Security.Cryptography;
 
 namespace FiatShamirIdentification
 {
-    public class Proover 
+    public class Proover
     {
         private readonly BigInteger _key;
         private readonly BigInteger _mod;

@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.1.0
+//version V.2.0 alpha
 
 using System;
 using System.Numerics;
@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace FiatShamirIdentification
 {
-    
+
     /// <summary>
     /// Object that creates and stores keys.
     /// </summary>
@@ -39,7 +39,7 @@ namespace FiatShamirIdentification
 
         //check safety of selected prime numbers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool PrimeCheck(ref BigInteger q, ref BigInteger p, ulong distance) 
+        private static bool PrimeCheck(ref BigInteger q, ref BigInteger p, ulong distance)
         {
             return BigInteger.Abs(p-q) > distance;
         }
@@ -122,7 +122,7 @@ namespace FiatShamirIdentification
             var genwrap = new GeneratorWrap(gen, wordSize/2);//generator half size
             IPrime mainGenerator, workerGenerator;
 
-            //threads' distribution for primes creation 
+            //threads' distribution for primes creation
             if (threads < 4)
             {
                 mainGenerator = new SeqPrime(genwrap.GetInt(), precision, wordSize/2);
