@@ -37,5 +37,27 @@ namespace FiatShamirIdentification
         {
             return new Verifier(_key, _modulus);
         }
+        
+        public byte[] Export()
+        {
+            var key = _key.ToByteArray();
+            var modulus = _modulus.ToByteArray();
+            var length = BitConverter.GetBytes(Convert.ToUInt16(key.length);
+            var result = new byte[2 + key.length + modulus.length]
+            length.CopyTo(result, 0);
+            key.CopyTo(result, 2);
+            modulus.CopyTo(result, 2+key.length)
+            return result;
+        }
+        
+        public static PublicKey Import(byte[] rawKey)
+        {
+            var length = BitConverter.ToUInt16(rawKey, 0);
+            var key = new byte[length];
+            Array.Copy(rawKey, 2, key, 0, length);
+            var modulus = new byte[rawKey.length - 2 - length];
+            Array.Copy(rawKey, 2, modulus, 2+length, modulus.length);
+            return new PublicKey(new BigInteger(key), new BigInteger());
+        }
     }
 }

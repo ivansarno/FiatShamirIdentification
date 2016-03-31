@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 alpha
+//version V.2.0 beta
 
 using System;
 using System.Numerics;
@@ -38,7 +38,7 @@ namespace FiatShamirIdentification
         private bool _synch;
 
 
-        public Verifier(BigInteger publicKey, BigInteger module)
+        internal Verifier(BigInteger publicKey, BigInteger module)
         {
             if (module <= 1)
                 throw new ArgumentException("module <= 1");

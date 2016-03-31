@@ -23,7 +23,7 @@ namespace FiatShamirIdentification
 {
     /// <summary>
     /// Utility for prime numbers.
-    /// for internal use, for now.
+    /// for internal use.
     /// </summary>
     internal interface IPrime
     {

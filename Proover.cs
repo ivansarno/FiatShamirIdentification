@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 alpha
+//version V.2.0 beta
 
 using System;
 using System.Numerics;
@@ -39,7 +39,7 @@ namespace FiatShamirIdentification
         /// <param name="module">module of the key</param>
         /// <param name="wordSize">key size in bytes</param>
         /// <param name="gen">random number generator, it is not disposed.</param>
-        public Proover(BigInteger privateKey, BigInteger module, RandomNumberGenerator gen, uint wordSize = 128)
+        internal Proover(BigInteger privateKey, BigInteger module, RandomNumberGenerator gen, uint wordSize = 128)
         {
             if (module <= 1 || wordSize < 8 || gen == null)
                 throw new ArgumentException("module <= 1 or wordSize < 8 or gen == null");

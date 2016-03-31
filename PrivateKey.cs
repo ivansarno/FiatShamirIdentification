@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 //version V.2.0 alpha
-﻿using System;
+using System;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -113,7 +113,8 @@ namespace FiatShamirIdentification
 
             return firstPrime*secondPrime;
         }
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static BigInteger GenKey(GeneratorWrap gen, BigInteger modulus)
         {
             var key = gen.GetBig()%modulus;
@@ -123,10 +124,33 @@ namespace FiatShamirIdentification
             }
             return key;
         }
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool SecurityCheck(BigInteger first, BigInteger second)
         {
             return true;
+        }
+        
+        public byte[] Export()
+        {
+            var key = _key.ToByteArray();
+            var modulus = _modulus.ToByteArray();
+            var length = BitConverter.GetBytes(Convert.ToUInt16(key.length);
+            var result = new byte[2 + key.length + modulus.length]
+            length.CopyTo(result, 0);
+            key.CopyTo(result, 2);
+            modulus.CopyTo(result, 2+key.length)
+            return result;
+        }
+        
+        public static PrivateKey Import(byte[] rawKey)
+        {
+            var length = BitConverter.ToUInt16(rawKey, 0);
+            var key = new byte[length];
+            Array.Copy(rawKey, 2, key, 0, length);
+            var modulus = new byte[rawKey.length - 2 - length];
+            Array.Copy(rawKey, 2, modulus, 2+length, modulus.length);
+            return new PrivateKey(new BigInteger(key), new BigInteger());
         }
     }
 }
