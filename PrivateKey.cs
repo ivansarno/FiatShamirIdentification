@@ -68,7 +68,7 @@ namespace FiatShamirIdentification
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
 
-            while (!SecurityCheck(firstPrime, secondPrime))
+            while (!SecurityCheck(firstPrime, secondPrime, wordSize))
             {
                 secondPrime = gen.GetBig();
             }
@@ -98,7 +98,7 @@ namespace FiatShamirIdentification
             //primes creation
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
-            while (!SecurityCheck(firstPrime, secondPrime))
+            while (!SecurityCheck(firstPrime, secondPrime, wordSize))
             {
                 secondPrime = gen.GetBig();
             }
@@ -125,9 +125,20 @@ namespace FiatShamirIdentification
             return key;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool SecurityCheck(BigInteger first, BigInteger second)
         {
+            var dinstance = BigInteger.Pow(first-second, 4);
+            var modulus = first * second;
+            if(modulus >= dinstance)
+                return false;
+                
+            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(first), 2);
+            if(dinstance < Int32.Max)
+                return false;
+                
+            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(second), 2);
+            if(dinstance < Int32.Max)
+                return false;
             return true;
         }
         
