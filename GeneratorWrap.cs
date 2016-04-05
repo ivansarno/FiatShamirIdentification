@@ -24,7 +24,7 @@ using System.Security.Cryptography;
 
 namespace FiatShamirIdentification
 {
-    internal class GeneratorWrap
+    internal sealed class GeneratorWrap
     {
         private readonly RandomNumberGenerator _gen;
         private readonly byte[] _buffer;

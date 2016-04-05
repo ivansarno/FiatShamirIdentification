@@ -22,7 +22,7 @@ limitations under the License.
 
 namespace FiatShamirIdentification
 {
-    public class PublicKey
+    public sealed class PublicKey
     {
         private readonly BigInteger _key;
         private readonly BigInteger _modulus;

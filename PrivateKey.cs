@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace FiatShamirIdentification
 {
-    public class PrivateKey
+    public sealed class PrivateKey
     {
         private readonly BigInteger _key;
         private readonly BigInteger _modulus;

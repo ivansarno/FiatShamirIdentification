@@ -27,7 +27,7 @@ namespace FiatShamirIdentification
     /// that is associated with his public key.
     /// Single iteration of protocol have error ratio = 1/2.
     /// </summary>
-    public class Verifier
+    public sealed class Verifier
     {
         private bool _choice;
         private readonly BigInteger _key;

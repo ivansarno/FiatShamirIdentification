@@ -24,7 +24,7 @@ using System.Security.Cryptography;
 
 namespace FiatShamirIdentification
 {
-    public class Proover
+    public sealed class Proover
     {
         private readonly BigInteger _key;
         private readonly BigInteger _mod;
