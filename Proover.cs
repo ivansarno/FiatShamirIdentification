@@ -41,8 +41,8 @@ namespace FiatShamirIdentification
         /// <param name="gen">random number generator, it is not disposed.</param>
         internal Proover(BigInteger privateKey, BigInteger module, RandomNumberGenerator gen, uint wordSize = 128)
         {
-            if (module <= 1 || wordSize < 8 || gen == null)
-                throw new ArgumentException("module <= 1 or wordSize < 8 or gen == null");
+            //if (module <= 1 || wordSize < 8 || gen == null)
+              //  throw new ArgumentException("module <= 1 or wordSize < 8 or gen == null");
             _mod = module;
             _key = privateKey;
             _generator = new GeneratorWrap(gen, wordSize);
@@ -70,6 +70,7 @@ namespace FiatShamirIdentification
         /// Take the result of Verifier.step1() and return the proof to send to Verifier.
         /// </summary>
         /// <param name="choice">result of Verifier.step1()</param>
+        /// <exception cref="InvalidOperationException"> Proover.Step2 is called before calling Proover.Step1</exception>
         /// <returns>a number to send to Verifier</returns>
         public BigInteger Step2(bool choice)
         {

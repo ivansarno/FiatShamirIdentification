@@ -55,5 +55,17 @@ namespace FiatShamirIdentification
             _gen.GetBytes(_buffer, 0, 4);
             return BitConverter.ToInt32(_buffer, 0);
         }
+
+        public ulong GetULong()
+        {
+            _gen.GetBytes(_buffer, 0, 8);
+            return BitConverter.ToUInt64(_buffer, 0);
+        }
+
+        public uint GetUInt()
+        {
+            _gen.GetBytes(_buffer, 0, 4);
+            return BitConverter.ToUInt32(_buffer, 0);
+        }
     }
 }

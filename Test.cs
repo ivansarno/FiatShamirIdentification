@@ -43,7 +43,7 @@ namespace FiatShamirIdentification
             BigInteger number;
             bool result = true;
             var generator = new RNGCryptoServiceProvider();
-            var priv = PrivateKey.GeneratesKey(generator, wordSize);
+            var priv = PrivateKey.NewKey(generator, wordSize);
             var pub = priv.GetPublicKey();
             Verifier verifier = pub.GetVerifier();
             Proover proover = priv.GetProover(generator);
@@ -116,7 +116,7 @@ namespace FiatShamirIdentification
             bool choice;
             BigInteger number;
             bool result = true;
-            var priv = PrivateKey.GeneratesKey(generator, wordSize, threads, primePrecision);
+            var priv = PrivateKey.NewKey(generator, wordSize, threads, primePrecision);
             var pub = priv.GetPublicKey();
             Verifier verifier = pub.GetVerifier();
             Proover proover = priv.GetProover(generator);

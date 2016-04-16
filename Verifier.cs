@@ -72,6 +72,7 @@ namespace FiatShamirIdentification
         /// Take the result of Proover.stap2() and return the state of identification.
         /// </summary>
         /// <param name="proof">result of Proover.stap2()</param>
+        /// <exception cref="InvalidOperationException">Verifier.Step2 is called before calling Verifier.Step1</exception>
         /// <returns>true if the Proover is identified</returns>
         public bool Step2(BigInteger proof)
         {

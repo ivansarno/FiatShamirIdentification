@@ -18,12 +18,14 @@ limitations under the License.
 //version V.2.0 alpha
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 
 namespace FiatShamirIdentification
 {
+    [Serializable]
     public sealed class PrivateKey
     {
         private readonly BigInteger _key;
@@ -35,17 +37,25 @@ namespace FiatShamirIdentification
             _modulus = modulus;
         }
 
+        /// <summary>
+        /// Return the PublicKey associated at this PrivateKey to send to servers for the Identifications.
+        /// </summary>
+        /// <returns>PublicKey associated at this PrivateKey</returns>
         public PublicKey GetPublicKey()
         {
             return new PublicKey(_key*_key%_modulus, _modulus);
         }
 
+        /// <summary>
+        /// Return the Proover associated at this PrivateKey to an identification session.
+        /// </summary>
+        /// <returns>Proover associated at this PrivateKey</returns>
         public Proover GetProover(RandomNumberGenerator gen)
         {
             return new Proover(_key, _modulus, gen);
         }
 
-        public static PrivateKey GeneratesKey(RandomNumberGenerator gen, uint wordSize = 128, int threads = 2,
+        public static PrivateKey NewKey(RandomNumberGenerator gen, uint wordSize = 128, int threads = 2,
             uint precision = 20)
         {
             if (precision < 1 || wordSize < 8 || gen == null)
@@ -68,7 +78,7 @@ namespace FiatShamirIdentification
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
 
-            while (!SecurityCheck(firstPrime, secondPrime, wordSize))
+            while (!SecurityCheck(firstPrime, secondPrime))
             {
                 secondPrime = gen.GetBig();
             }
@@ -98,7 +108,7 @@ namespace FiatShamirIdentification
             //primes creation
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
-            while (!SecurityCheck(firstPrime, secondPrime, wordSize))
+            while (!SecurityCheck(firstPrime, secondPrime))
             {
                 secondPrime = gen.GetBig();
             }
@@ -132,36 +142,57 @@ namespace FiatShamirIdentification
             if(modulus >= dinstance)
                 return false;
                 
-            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(first), 2);
-            if(dinstance < Int32.Max)
+            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(first, 2));
+            if(dinstance < Int32.MaxValue)
                 return false;
                 
-            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(second), 2);
-            if(dinstance < Int32.Max)
+            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(second, 2));
+            if(dinstance < Int32.MaxValue)
                 return false;
             return true;
         }
-        
-        public byte[] Export()
+
+        /// <summary>
+        /// Return a binary representation of the PrivateKey.
+        /// User can use this to restore the key with Import method.
+        /// </summary>
+        /// <returns>bytes array represented the PrivateKey</returns>
+        public byte[] ToByteArray()
         {
             var key = _key.ToByteArray();
             var modulus = _modulus.ToByteArray();
-            var length = BitConverter.GetBytes(Convert.ToUInt16(key.length);
-            var result = new byte[2 + key.length + modulus.length]
+            var length = BitConverter.GetBytes(Convert.ToUInt16(key.Length));
+            var result = new byte[2 + key.Length + modulus.Length];
             length.CopyTo(result, 0);
             key.CopyTo(result, 2);
-            modulus.CopyTo(result, 2+key.length)
+            modulus.CopyTo(result, 2 + key.Length);
             return result;
         }
-        
-        public static PrivateKey Import(byte[] rawKey)
+
+
+        /// <summary>
+        /// Convert a bytes array represented a PrivateKey to a PrivateKey.
+        /// This method restore a PrivateKey exported with ToByteArray method
+        /// </summary>
+        /// <param name="rawKey">bytes array represented a PrivateKey</param>
+        /// <exception cref="ArgumentException">the bytes array not represents a PrivateKey</exception>
+        public PrivateKey(byte[] rawKey)
         {
-            var length = BitConverter.ToUInt16(rawKey, 0);
-            var key = new byte[length];
-            Array.Copy(rawKey, 2, key, 0, length);
-            var modulus = new byte[rawKey.length - 2 - length];
-            Array.Copy(rawKey, 2, modulus, 2+length, modulus.length);
-            return new PrivateKey(new BigInteger(key), new BigInteger());
+            try
+            {
+                var length = BitConverter.ToUInt16(rawKey, 0);
+                var key = new byte[length];
+                Array.Copy(rawKey, 2, key, 0, length);
+                var modulus = new byte[rawKey.Length - 2 - length];
+                Array.Copy(rawKey, 2, modulus, 2 + length, modulus.Length);
+                _key = new BigInteger(key); 
+                _modulus = new BigInteger(modulus);
+            }
+            catch (ArgumentException)
+            {
+
+                throw new ArgumentException("rawKey bytes array not represents a PrivateKey");
+            }
         }
     }
 }
