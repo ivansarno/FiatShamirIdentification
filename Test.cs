@@ -162,5 +162,29 @@ namespace FiatShamirIdentification
             System.Console.WriteLine("FiatShamirIdentification test OK\n");
             return true;
         }
+
+        public static bool RepresentationTest()
+        {
+            var originalPriv = PrivateKey.NewKey(new RNGCryptoServiceProvider());
+            var newPriv = PrivateKey.ResumeKey(originalPriv.SaveKey());
+
+            if (!PrivateKey.EqTest(originalPriv, newPriv))
+            {
+                System.Console.WriteLine("Representation Test ERROR: PrivateKey problem.\n");
+                return false;
+            }
+
+            var originalPub = originalPriv.GetPublicKey();
+            var newPub = PublicKey.ResumeKey(originalPub.SaveKey());
+
+            if (!PublicKey.EqTest(originalPub, newPub))
+            {
+                System.Console.WriteLine("Representation Test ERROR: PublicKey problem.\n");
+                return false;
+            }
+
+            System.Console.WriteLine("Representation Test OK.\n");
+            return true;
+        }
     }
 }

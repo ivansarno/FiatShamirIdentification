@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 alpha
+//version V.2.0 beta
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -137,62 +137,59 @@ namespace FiatShamirIdentification
         
         private static bool SecurityCheck(BigInteger first, BigInteger second)
         {
-            var dinstance = BigInteger.Pow(first-second, 4);
+            var distance = BigInteger.Pow(first-second, 4);
             var modulus = first * second;
-            if(modulus >= dinstance)
+            if(modulus >= distance)
                 return false;
                 
-            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(first, 2));
-            if(dinstance < Int32.MaxValue)
+            distance = BigInteger.Abs(modulus - BigInteger.Pow(first, 2));
+            if(distance < Int32.MaxValue)
                 return false;
                 
-            dinstance = BigInteger.Abs(modulus - BigInteger.Pow(second, 2));
-            if(dinstance < Int32.MaxValue)
+            distance = BigInteger.Abs(modulus - BigInteger.Pow(second, 2));
+            if(distance < Int32.MaxValue)
                 return false;
             return true;
         }
 
         /// <summary>
         /// Return a binary representation of the PrivateKey.
-        /// User can use this to restore the key with Import method.
+        /// User can use this to restore the key with ResumeKey method.
         /// </summary>
         /// <returns>bytes array represented the PrivateKey</returns>
-        public byte[] ToByteArray()
+        public byte[] SaveKey()
         {
             var key = _key.ToByteArray();
             var modulus = _modulus.ToByteArray();
-            var length = BitConverter.GetBytes(Convert.ToUInt16(key.Length));
-            var result = new byte[2 + key.Length + modulus.Length];
-            length.CopyTo(result, 0);
-            key.CopyTo(result, 2);
-            modulus.CopyTo(result, 2 + key.Length);
-            return result;
+            var length = BitConverter.GetBytes(key.Length);
+            return length.Concat(key, modulus);
         }
 
 
         /// <summary>
         /// Convert a bytes array represented a PrivateKey to a PrivateKey.
-        /// This method restore a PrivateKey exported with ToByteArray method
+        /// This method restore a PrivateKey exported with SaveKey method
         /// </summary>
         /// <param name="rawKey">bytes array represented a PrivateKey</param>
         /// <exception cref="ArgumentException">the bytes array not represents a PrivateKey</exception>
-        public PrivateKey(byte[] rawKey)
+        /// <returns>the PrivateKey resumed from the byte array</returns>
+        public static PrivateKey ResumeKey(byte[] rawKey)
         {
             try
             {
-                var length = BitConverter.ToUInt16(rawKey, 0);
-                var key = new byte[length];
-                Array.Copy(rawKey, 2, key, 0, length);
-                var modulus = new byte[rawKey.Length - 2 - length];
-                Array.Copy(rawKey, 2, modulus, 2 + length, modulus.Length);
-                _key = new BigInteger(key); 
-                _modulus = new BigInteger(modulus);
+                var length = BitConverter.ToInt32(rawKey, 0);
+                return new PrivateKey(new BigInteger(rawKey.Slice(4, 4 + length)), new BigInteger(rawKey.Slice(4 + length)));
             }
             catch (ArgumentException)
             {
 
                 throw new ArgumentException("rawKey bytes array not represents a PrivateKey");
             }
+        }
+
+        internal static bool EqTest(PrivateKey first, PrivateKey second)
+        {
+            return first._key == second._key && first._modulus == second._modulus;
         }
     }
 }

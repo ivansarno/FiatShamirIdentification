@@ -19,7 +19,9 @@ limitations under the License.
 
 using System;
 using System.Numerics;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
+using System.Threading;
 
 
 namespace FiatShamirIdentification
@@ -66,6 +68,44 @@ namespace FiatShamirIdentification
         {
             _gen.GetBytes(_buffer, 0, 4);
             return BitConverter.ToUInt32(_buffer, 0);
+        }
+    }
+
+    internal static class ArrayExtension
+    {
+        internal static T[] Slice<T>(this T[] source, int start, int end)
+        {
+            var length = end - start;
+            var slice = new T[length];
+            Array.Copy(source, start, slice, 0, length);
+            return slice;
+        }
+
+        internal static T[] Slice<T>(this T[] source, int start)
+        {
+            var length = source.Length - start;
+            var slice = new T[length];
+            Array.Copy(source, start, slice, 0, length);
+            return slice;
+        }
+
+        internal static T[] Concat<T>(this T[] first, T[] second)
+        {
+            var length = first.Length + second.Length;
+            var union = new T[length];
+            Array.Copy(first, union, first.Length);
+            Array.Copy(second, 0, union, first.Length, second.Length);
+            return union;
+        }
+
+        internal static T[] Concat<T>(this T[] first, T[] second, T[] third)
+        {
+            var length = first.Length + second.Length + third.Length;
+            var union = new T[length];
+            Array.Copy(first, union, first.Length);
+            Array.Copy(second, 0, union, first.Length, second.Length);
+            Array.Copy(third, 0, union, first.Length + second.Length, third.Length);
+            return union;
         }
     }
 }

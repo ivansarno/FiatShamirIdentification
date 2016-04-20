@@ -52,45 +52,42 @@ namespace FiatShamirIdentification
 
         /// <summary>
         /// Return a binary representation of the PublicKey.
-        /// User can use this to restore the key with Import method.
+        /// User can use this to restore the key with ResumeKey method.
         /// </summary>
         /// <returns>bytes array represented the PublicKey</returns>
-        public byte[] Export()
+        public byte[] SaveKey()
         {
             var key = _key.ToByteArray();
             var modulus = _modulus.ToByteArray();
-            var length = BitConverter.GetBytes(Convert.ToUInt16(key.Length));
-            var result = new byte[2 + key.Length + modulus.Length];
-            length.CopyTo(result, 0);
-            key.CopyTo(result, 2);
-            modulus.CopyTo(result, 2 + key.Length);
-            return result;
+            var length = BitConverter.GetBytes(key.Length);
+            return length.Concat(key, modulus);
         }
 
 
         /// <summary>
         /// Convert a bytes array represented a PublicKey to a PublicKey.
-        /// This method restore a PublicKey exported with ToByteArray method
+        /// This method restore a PublicKey exported with SaveKey method
         /// </summary>
         /// <param name="rawKey">bytes array represented a PublicKey</param>
         /// <exception cref="ArgumentException">the bytes array not represents a PublicKey</exception>
-        public PublicKey(byte[] rawKey)
+        /// <returns>the PublicKey resumed from the byte array</returns>
+        public static PublicKey ResumeKey(byte[] rawKey)
         {
             try
             {
-                var length = BitConverter.ToUInt16(rawKey, 0);
-                var key = new byte[length];
-                Array.Copy(rawKey, 2, key, 0, length);
-                var modulus = new byte[rawKey.Length - 2 - length];
-                Array.Copy(rawKey, 2, modulus, 2 + length, modulus.Length);
-                _key = new BigInteger(key);
-                _modulus = new BigInteger(modulus);
+                var length = BitConverter.ToInt32(rawKey, 0);
+                return new PublicKey(new BigInteger(rawKey.Slice(4, 4 + length)), new BigInteger(rawKey.Slice(4 + length)));
             }
             catch (ArgumentException)
             {
 
                 throw new ArgumentException("rawKey bytes array not represents a PublicKey");
             }
+        }
+
+        internal static bool EqTest(PublicKey first, PublicKey second)
+        {
+            return first._key == second._key && first._modulus == second._modulus;
         }
     }
 }
