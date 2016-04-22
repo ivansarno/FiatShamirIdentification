@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 beta
+//version V.2.0
 
 using System;
 using System.Numerics;
@@ -41,8 +41,6 @@ namespace FiatShamirIdentification
         /// <param name="gen">random number generator, it is not disposed.</param>
         internal Proover(BigInteger privateKey, BigInteger module, RandomNumberGenerator gen, uint wordSize = 128)
         {
-            //if (module <= 1 || wordSize < 8 || gen == null)
-              //  throw new ArgumentException("module <= 1 or wordSize < 8 or gen == null");
             _mod = module;
             _key = privateKey;
             _generator = new GeneratorWrap(gen, wordSize);
@@ -59,17 +57,17 @@ namespace FiatShamirIdentification
 
             _sessionNumber = _generator.GetBig()%_mod;
             _synch = true;
-            while (_sessionNumber < 2) //avoid comunication of the key
-                _sessionNumber = (_sessionNumber + 2)%_mod;
+            while(_sessionNumber < UInt64.MaxValue) //avoid comunication of the key
+                _sessionNumber = _generator.GetBig() % _mod;
             return (_sessionNumber*_sessionNumber)%_mod;
 
         }
 
 
         /// <summary>
-        /// Take the result of Verifier.step1() and return the proof to send to Verifier.
+        /// Take the result of Verifier.Step1() and return the proof to send to Verifier.
         /// </summary>
-        /// <param name="choice">result of Verifier.step1()</param>
+        /// <param name="choice">result of Verifier.Step1()</param>
         /// <exception cref="InvalidOperationException"> Proover.Step2 is called before calling Proover.Step1</exception>
         /// <returns>a number to send to Verifier</returns>
         public BigInteger Step2(bool choice)

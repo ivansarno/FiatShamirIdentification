@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 beta
+//version V.2.0
 
 using System;
 using System.Numerics;
@@ -51,14 +51,15 @@ namespace FiatShamirIdentification
 
 
         /// <summary>
-        /// Take the result of Proover.Stap1() and return a random choice to send to Proover.
+        /// Take the result of Proover.Step1() and return a random choice to send to Proover.
         /// </summary>
-        /// <param name="init">result of Proover.Stap1()</param>
+        /// <param name="init">result of Proover.Step1()</param>
+        /// /// <exception cref="ArgumentException"> invalid init </exception>
         /// <returns>bool to send to Proover</returns>
         public bool Step1(ref BigInteger init)
         {
-            if (init == 0)
-                throw new ArgumentException("init == 0");
+            if (init < 2)
+                throw new ArgumentException("init < 2");
 
             _sessionNumber = init;
             _choice = (_bitgen.Next() % 2) == 1;
@@ -69,9 +70,9 @@ namespace FiatShamirIdentification
 
 
         /// <summary>
-        /// Take the result of Proover.stap2() and return the state of identification.
+        /// Take the result of Proover.Step2() and return the state of identification.
         /// </summary>
-        /// <param name="proof">result of Proover.stap2()</param>
+        /// <param name="proof">result of Proover.Step2()</param>
         /// <exception cref="InvalidOperationException">Verifier.Step2 is called before calling Verifier.Step1</exception>
         /// <returns>true if the Proover is identified</returns>
         public bool Step2(BigInteger proof)

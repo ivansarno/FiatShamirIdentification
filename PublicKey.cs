@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 beta
+//version V.2.0
 
 using System;
 using System.Numerics;
@@ -65,7 +65,6 @@ namespace FiatShamirIdentification
 
 
         /// <summary>
-        /// Convert a bytes array represented a PublicKey to a PublicKey.
         /// This method restore a PublicKey exported with SaveKey method
         /// </summary>
         /// <param name="rawKey">bytes array represented a PublicKey</param>

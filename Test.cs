@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0 beta
+//version V.2.0
 
 using System.Numerics;
 using System.Security.Cryptography;
@@ -95,13 +95,12 @@ namespace FiatShamirIdentification
 
 
         /// <summary>
-        /// Customizable version with full KeyGen parameters.
+        /// Customizable version with full NewKey parameters.
         /// </summary>
         /// <param name="wordSize">number of byte of the key</param>
         /// <param name="testPrecision">percision of the test, error = 1/2^precision</param>
         /// <param name="primePrecision">percision of primality test, error = 1/2^(2*precision)</param>
         /// <param name="generator">random number generator, it is not disposed</param>
-        /// <param name="primeDistance">distance between 2 prime, for security</param>
         /// <param name="threads">number of threads to use</param>
         /// <returns>result of the test</returns>
         public static bool CustomTest(uint wordSize, uint testPrecision, uint primePrecision, RandomNumberGenerator generator, ulong primeDistance=uint.MaxValue, int threads = 1)
