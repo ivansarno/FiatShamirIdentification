@@ -17,7 +17,10 @@ limitations under the License.
 */
 //version V.2.0
 
+using System;
+using System.IO;
 using System.Numerics;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 
 namespace FiatShamirIdentification
@@ -185,5 +188,7 @@ namespace FiatShamirIdentification
             System.Console.WriteLine("Representation Test OK.\n");
             return true;
         }
+
+        
     }
 }

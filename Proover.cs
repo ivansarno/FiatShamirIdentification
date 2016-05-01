@@ -24,6 +24,11 @@ using System.Security.Cryptography;
 
 namespace FiatShamirIdentification
 {
+    /// <summary>
+    /// Object that interacts with a Verifier object to demonstrate possession of the private key
+    /// from which it derives the key of the Verifier.
+    /// Single iteration of protocol have error ratio = 1/2.
+    /// </summary>
     public sealed class Proover
     {
         private readonly BigInteger _key;
