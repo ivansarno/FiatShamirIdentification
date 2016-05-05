@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.1.0
+//version V.2.0
 
 using System;
 using System.Numerics;
@@ -23,11 +23,11 @@ using System.Numerics;
 namespace FiatShamirIdentification
 {
     /// <summary>
-    /// Object that checks whether an object Proover has the private key 
+    /// Object that checks whether an object Proover has the private key
     /// that is associated with his public key.
     /// Single iteration of protocol have error ratio = 1/2.
     /// </summary>
-    public class Verifier
+    public sealed class Verifier
     {
         private bool _choice;
         private readonly BigInteger _key;
@@ -38,7 +38,7 @@ namespace FiatShamirIdentification
         private bool _synch;
 
 
-        public Verifier(BigInteger publicKey, BigInteger module)
+        internal Verifier(BigInteger publicKey, BigInteger module)
         {
             if (module <= 1)
                 throw new ArgumentException("module <= 1");
@@ -49,16 +49,17 @@ namespace FiatShamirIdentification
             _synch = false;
         }
 
-        
+
         /// <summary>
-        /// Take the result of Proover.Stap1() and return a random choice to send to Proover.
+        /// Take the result of Proover.Step1() and return a random choice to send to Proover.
         /// </summary>
-        /// <param name="init">result of Proover.Stap1()</param>
+        /// <param name="init">result of Proover.Step1()</param>
+        /// /// <exception cref="ArgumentException"> invalid init </exception>
         /// <returns>bool to send to Proover</returns>
         public bool Step1(ref BigInteger init)
         {
-            if (init == 0)
-                throw new ArgumentException("init == 0");
+            if (init < 2)
+                throw new ArgumentException("init < 2");
 
             _sessionNumber = init;
             _choice = (_bitgen.Next() % 2) == 1;
@@ -67,11 +68,12 @@ namespace FiatShamirIdentification
             return _choice;
         }
 
-        
+
         /// <summary>
-        /// Take the result of Proover.stap2() and return the state of identification.
+        /// Take the result of Proover.Step2() and return the state of identification.
         /// </summary>
-        /// <param name="proof">result of Proover.stap2()</param>
+        /// <param name="proof">result of Proover.Step2()</param>
+        /// <exception cref="InvalidOperationException">Verifier.Step2 is called before calling Verifier.Step1</exception>
         /// <returns>true if the Proover is identified</returns>
         public bool Step2(BigInteger proof)
         {
@@ -91,7 +93,7 @@ namespace FiatShamirIdentification
             return _state;
         }
 
-        
+
         /// <summary>
         /// Return the state of identification in this iteration.
         /// Single iteration of protocol have error ratio = 1/2.

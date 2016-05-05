@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.1.0
+//version V.2.0
 
 using System;
 using System.Numerics;
@@ -28,7 +28,7 @@ namespace FiatShamirIdentification
     /// <summary>
     /// Utility for prime numbers.
     /// parallel version.
-    /// for internal use, for now.
+    /// for internal use.
     /// </summary>
     internal class ParPrime: IPrime
     {
@@ -87,12 +87,12 @@ namespace FiatShamirIdentification
             uint w;
             BigInteger z;
 
-            
+
             MRscomposition(ref number, out w, out z);
 
             bool ris = true;
             uint i = 0;
-            
+
             while (_continue && ris && i < _precision)
             {
                 //extract a random number

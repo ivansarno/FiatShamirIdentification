@@ -1,27 +1,29 @@
 # FiatShamirIdentification
 C# OOP implementation of Fiat Shamir Identification Scheme
 
-Library includes:
+Library includes the classes:
 
-	-KeyGen class
-	-Proover class
-	-Verifier class
+	-PrivateKey
+  	-PublicKey
+	-Proover
+	-Verifier
 
-The library supports multithread key creation
+These classes provide key creation, key-bytes conversion, and the Fiat Shamir Identification protocol.
+The library supports multithread key creation.
 
-*Random Number Generator*
-
+*Random Number Generator*  
 User can using a your own subclass of .NET RandomNumberGenerator abstract class.
 
 *Usage:*
 
-    a)the client create the keys with KeyGen
-    b)the client instantiates a Proover object with the private key
-    c)the server instantiates a Verifier object with the public key of client
+    a)the client create a private key with PrivateKey.NewKey static method
+    b)the client generate a public key from the private key with GetPublicKey and send this to the server
+    c)the client instantiates a Proover from the private key with GetProover
+    c)the server instantiates a Verifier from the public key with GetVerifier
     d)run a session of the protocol exchanging the result of methods for N iteration, with N is the precision you like:
 
-        1)Client: Proover.step1 -> Server
-        2)Server: Verifier.step1 -> Client
-        3)Client: Proover.step2 -> Server
-        4)Server: Verifier.step2 -> result of identification
-        4.1)Server: Verifier.checkstate -> result of identification
+        1)Client: Proover.Step1 -> Server
+        2)Server: Verifier.Step1 -> Client
+        3)Client: Proover.Step2 -> Server
+        4)Server: Verifier.Step2 -> result of identification
+        4.1)Server: Verifier.CheckState -> result of identification
