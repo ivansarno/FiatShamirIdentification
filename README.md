@@ -4,7 +4,7 @@ C# OOP implementation of Fiat Shamir Identification Scheme
 Library includes the classes:
 
 	-PrivateKey
-  -PublicKey
+  	-PublicKey
 	-Proover
 	-Verifier
 
