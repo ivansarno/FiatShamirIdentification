@@ -55,6 +55,15 @@ namespace FiatShamirIdentification
             return new Proover(_key, _modulus, gen);
         }
 
+
+        /// <summary>
+        /// Create a new PrivateKey
+        /// </summary>
+        /// <param name="gen">secure random number generation</param>
+        /// <param name="wordSize">length in bytes of the key's modulus</param>
+        /// <param name="threads">number of threads to use for the generation</param>
+        /// <param name="precision">precision of primality test, error=1/2^(2*precision)</param>
+        /// <returns>new private key</returns>
         public static PrivateKey NewKey(RandomNumberGenerator gen, uint wordSize = 128, int threads = 2,
             uint precision = 20)
         {
@@ -93,7 +102,7 @@ namespace FiatShamirIdentification
         private static BigInteger ParGenMod(GeneratorWrap gen, uint wordSize, int threads, uint precision)
         {
             IPrime mainGenerator, workerGenerator;
-            //threads' distribution for primes creation
+            //threads distribution for primes creation
             if (threads < 4)
             {
                 mainGenerator = new SeqPrime(gen.GetInt(), precision, wordSize);
@@ -128,7 +137,7 @@ namespace FiatShamirIdentification
         private static BigInteger GenKey(GeneratorWrap gen, BigInteger modulus)
         {
             var key = gen.GetBig()%modulus;
-            while (key * key % modulus == 0)//avoid private key or public key == 0
+            while (key * key % modulus < 2)//avoid private key or public key == 0 or == 1
             {
                 key = gen.GetBig() % modulus;
             }
