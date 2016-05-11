@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0
+//version V.2.1
 
 using System;
 using System.Numerics;
@@ -31,8 +31,7 @@ namespace FiatShamirIdentification
     /// </summary>
     public sealed class Proover
     {
-        private readonly BigInteger _key;
-        private readonly BigInteger _mod;
+        private readonly PrivateKey _key;
         private BigInteger _sessionNumber;
         private readonly GeneratorWrap _generator;
         private bool _synch;
@@ -40,15 +39,12 @@ namespace FiatShamirIdentification
 
         /// <summary>
         /// </summary>
-        /// <param name="privateKey">private key</param>
-        /// <param name="module">module of the key</param>
-        /// <param name="wordSize">key size in bytes</param>
+        /// <param name="key">private key</param>
         /// <param name="gen">random number generator, it is not disposed.</param>
-        internal Proover(BigInteger privateKey, BigInteger module, RandomNumberGenerator gen, uint wordSize = 128)
+        internal Proover(PrivateKey key, RandomNumberGenerator gen)
         {
-            _mod = module;
-            _key = privateKey;
-            _generator = new GeneratorWrap(gen, wordSize);
+            _key = key;
+            _generator = new GeneratorWrap(gen, key.Size);
             _synch = false;
         }
 
@@ -60,11 +56,11 @@ namespace FiatShamirIdentification
         public BigInteger Step1()
         {
 
-            _sessionNumber = _generator.GetBig()%_mod;
+            _sessionNumber = _generator.GetBig()% _key.Modulus;
             _synch = true;
             while(_sessionNumber < UInt64.MaxValue) //avoid comunication of the key
-                _sessionNumber = _generator.GetBig() % _mod;
-            return (_sessionNumber*_sessionNumber)%_mod;
+                _sessionNumber = _generator.GetBig() % _key.Modulus;
+            return (_sessionNumber*_sessionNumber)% _key.Modulus;
 
         }
 
@@ -81,7 +77,7 @@ namespace FiatShamirIdentification
                 _synch = false;
             else throw new InvalidOperationException("Called Proover.Step2 before calling Proover.Step1");
             if (choice)
-                return (_sessionNumber*_key)%_mod;
+                return (_sessionNumber*_key.Key)% _key.Modulus;
             return _sessionNumber;
         }
     }

@@ -15,9 +15,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0
+//version V.2.1
 
 using System;
+using System.CodeDom;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -30,12 +31,18 @@ namespace FiatShamirIdentification
     {
         private readonly BigInteger _key;
         private readonly BigInteger _modulus;
+        private readonly uint _size;
 
-        internal PrivateKey(BigInteger key, BigInteger modulus)
+        internal PrivateKey(BigInteger key, BigInteger modulus, uint size)
         {
             _key = key;
             _modulus = modulus;
+            _size = size; 
         }
+
+        internal BigInteger Key => _key;
+        internal uint Size => _size;
+        internal BigInteger Modulus => _modulus;
 
         /// <summary>
         /// Return the PublicKey associated at this PrivateKey to send to servers for the Identifications.
@@ -52,7 +59,7 @@ namespace FiatShamirIdentification
         /// <returns>Proover associated at this PrivateKey</returns>
         public Proover GetProover(RandomNumberGenerator gen)
         {
-            return new Proover(_key, _modulus, gen);
+            return new Proover(this, gen);
         }
 
 
@@ -77,7 +84,7 @@ namespace FiatShamirIdentification
 
             var key = GenKey(new GeneratorWrap(gen, wordSize), modulus);
 
-            return new PrivateKey(key, modulus);
+            return new PrivateKey(key, modulus, wordSize);
         }
 
         //Generates the modulus using one thread
@@ -170,7 +177,7 @@ namespace FiatShamirIdentification
         {
             var key = _key.ToByteArray();
             var modulus = _modulus.ToByteArray();
-            var length = BitConverter.GetBytes(key.Length);
+            var length = BitConverter.GetBytes(key.Length).Concat(BitConverter.GetBytes(_size));
             return length.Concat(key, modulus);
         }
 
@@ -187,7 +194,8 @@ namespace FiatShamirIdentification
             try
             {
                 var length = BitConverter.ToInt32(rawKey, 0);
-                return new PrivateKey(new BigInteger(rawKey.Slice(4, 4 + length)), new BigInteger(rawKey.Slice(4 + length)));
+                var wordSize = BitConverter.ToUInt32(rawKey, 4);
+                return new PrivateKey(new BigInteger(rawKey.Slice(8, 8 + length)), new BigInteger(rawKey.Slice(8 + length)), wordSize);
             }
             catch (ArgumentException)
             {

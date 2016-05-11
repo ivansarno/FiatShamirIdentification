@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0
+//version V.2.1
 
 using System;
 using System.Numerics;
@@ -34,9 +34,8 @@ namespace FiatShamirIdentification
             _modulus = modulus;
         }
 
-        // internal BigInteger Key => _key;
-
-        // internal BigInteger Modulus => _modulus;
+        internal BigInteger Key => _key;
+        internal BigInteger Modulus => _modulus;
 
 
         /// <summary>
@@ -45,7 +44,7 @@ namespace FiatShamirIdentification
         /// <returns>Verifier associated at this PublicKey</returns>
         public Verifier GetVerifier()
         {
-            return new Verifier(_key, _modulus);
+            return new Verifier(this);
         }
 
 
