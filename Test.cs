@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0
+//version V.2.1
 
 using System;
 using System.IO;
@@ -72,7 +72,8 @@ namespace FiatShamirIdentification
 
             //test without key
             var genwrap = new GeneratorWrap(generator, wordSize);
-            proover = new Proover(genwrap.GetBig(), genwrap.GetBig(), generator);
+            var falseKey = new PrivateKey(genwrap.GetBig(), genwrap.GetBig(), wordSize);
+            proover = new Proover(falseKey, generator);
             iteration = 0;
             while (iteration < testPrecision && result)
             {
@@ -143,7 +144,8 @@ namespace FiatShamirIdentification
 
             //test without key
             var genwrap = new GeneratorWrap(generator, wordSize);
-            proover = new Proover(genwrap.GetBig(), genwrap.GetBig(), generator);
+            var falseKey = new PrivateKey(genwrap.GetBig(), genwrap.GetBig(), wordSize);
+            proover = new Proover(falseKey, generator);
             iteration = 0;
             while (iteration < testPrecision && result)
             {
@@ -188,7 +190,5 @@ namespace FiatShamirIdentification
             System.Console.WriteLine("Representation Test OK.\n");
             return true;
         }
-
-        
     }
 }

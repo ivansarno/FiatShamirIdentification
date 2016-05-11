@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.0
+//version V.2.1
 
 using System;
 using System.Numerics;
@@ -30,20 +30,16 @@ namespace FiatShamirIdentification
     public sealed class Verifier
     {
         private bool _choice;
-        private readonly BigInteger _key;
-        private readonly BigInteger _mod;
+        private readonly PublicKey _key;
         private BigInteger _sessionNumber;
         private bool _state;
         private readonly Random _bitgen;
         private bool _synch;
 
 
-        internal Verifier(BigInteger publicKey, BigInteger module)
+        internal Verifier(PublicKey key)
         {
-            if (module <= 1)
-                throw new ArgumentException("module <= 1");
-            _key = publicKey;
-            _mod = module;
+            _key = key;
             _state = false;
             _bitgen = new Random();
             _synch = false;
@@ -80,12 +76,12 @@ namespace FiatShamirIdentification
             if(_synch)
                 _synch = false;
             else throw new InvalidOperationException("Called Verifier.Step2 before calling Verifier.Step1");
-            proof = (proof * proof) % _mod;
+            proof = (proof * proof) % _key.Modulus;
 
             BigInteger y;
 
             if (_choice)
-                y = (_sessionNumber * _key) % _mod;
+                y = (_sessionNumber * _key.Key) % _key.Modulus;
             else y = _sessionNumber;
 
             _state = proof == y;
