@@ -1,4 +1,4 @@
-/*
+﻿/*
     FiatShamirIdentification
 
     Copyright 2015 Ivan Sarno
@@ -23,6 +23,7 @@ using System.Numerics;
 
 namespace FiatShamirIdentification
 {
+    [Serializable]
     public sealed class PublicKey
     {
         private readonly BigInteger _key;

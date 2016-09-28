@@ -1,4 +1,4 @@
-/*
+﻿/*
     FiatShamirIdentification
 
     Copyright 2015 Ivan Sarno
@@ -18,7 +18,6 @@ limitations under the License.
 //version V.2.1
 
 using System;
-using System.CodeDom;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -27,6 +26,7 @@ using System.Threading.Tasks;
 
 namespace FiatShamirIdentification
 {
+    [Serializable]
     public sealed class PrivateKey
     {
         private readonly BigInteger _key;
@@ -90,7 +90,7 @@ namespace FiatShamirIdentification
         //Generates the modulus using one thread
         private static BigInteger SeqGenMod(GeneratorWrap gen, uint wordSize, uint precision)
         {
-            IPrime generator = new SeqPrime(gen.GetInt(), precision, wordSize);
+            IPrime generator = new SequentialPrime(gen.GetInt(), precision, wordSize);
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
 
@@ -112,13 +112,13 @@ namespace FiatShamirIdentification
             //threads distribution for primes creation
             if (threads < 4)
             {
-                mainGenerator = new SeqPrime(gen.GetInt(), precision, wordSize);
-                workerGenerator = new SeqPrime(gen.GetInt(), precision, wordSize);
+                mainGenerator = new SequentialPrime(gen.GetInt(), precision, wordSize);
+                workerGenerator = new SequentialPrime(gen.GetInt(), precision, wordSize);
             }
             else
             {
-                mainGenerator = new ParPrime(gen.GetInt(), precision, wordSize, threads - threads / 2);
-                workerGenerator = new ParPrime(gen.GetInt(), precision, wordSize, threads / 2);
+                mainGenerator = new ParallelPrime(gen.GetInt(), precision, wordSize, threads - threads / 2);
+                workerGenerator = new ParallelPrime(gen.GetInt(), precision, wordSize, threads / 2);
             }
 
             //primes creation
@@ -150,7 +150,8 @@ namespace FiatShamirIdentification
             }
             return key;
         }
-        
+
+        //checks whether the numbers found to comply with safety conditions
         private static bool SecurityCheck(BigInteger first, BigInteger second)
         {
             var distance = BigInteger.Pow(first-second, 4);
@@ -163,7 +164,7 @@ namespace FiatShamirIdentification
                 return false;
                 
             distance = BigInteger.Abs(modulus - BigInteger.Pow(second, 2));
-            if(distance < Int32.MaxValue)
+            if(distance < int.MaxValue)
                 return false;
             return true;
         }
@@ -204,6 +205,7 @@ namespace FiatShamirIdentification
             }
         }
 
+        //only for test
         internal static bool EqTest(PrivateKey first, PrivateKey second)
         {
             return first._key == second._key && first._modulus == second._modulus;

@@ -1,3 +1,7 @@
+Version 2.1.1
+
+Serializable keys
+
 Version 2.1
 
 Security and memory usage improvements.

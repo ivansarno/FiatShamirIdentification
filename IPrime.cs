@@ -1,4 +1,4 @@
-/*
+﻿/*
     FiatShamirIdentification
 
     Copyright 2015 Ivan Sarno
