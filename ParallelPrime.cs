@@ -15,34 +15,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.1
+//version V.2.2
 
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-
 namespace FiatShamirIdentification
 {
     /// <summary>
-    /// Utility for prime numbers.
-    /// parallel version.
-    /// for internal use.
+    ///     Utility for prime numbers.
+    ///     parallel version.
+    ///     for internal use.
     /// </summary>
-    internal class ParallelPrime: IPrime
+    internal class ParallelPrime : IPrime
     {
-        private readonly uint _precision; //precision of Miller-Rabin primality test
         private readonly Random _generator;
-        private bool _continue;
+        private readonly uint _precision; //precision of Miller-Rabin primality test
         private readonly uint _size;
-        private BigInteger _current;
-        private readonly AutoResetEvent _wait;
         private readonly int _threads;
+        private readonly AutoResetEvent _wait;
+        private bool _continue;
+        private BigInteger _current;
         private int _pass;
 
         /// <summary>
-        ///  </summary>
+        /// </summary>
         /// <param name="seed">seed of random number generator</param>
         /// <param name="precision">precision of Miller-Rabin test, error = 1/2^(2*precision)</param>
         /// <param name="wordSize">length in bytes of number generated</param>
@@ -58,6 +57,59 @@ namespace FiatShamirIdentification
             _threads = threads;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="precision">precision of Miller-Rabin test, error = 1/2^(2*precision)</param>
+        /// <param name="wordSize">length in bytes of number generated</param>
+        /// <param name="threads">number of threads to use</param>
+        public ParallelPrime(uint precision = 20, uint wordSize = 128, int threads = 2)
+        {
+            if (precision < 5 || wordSize < 8 || threads < 2)
+                throw new ArgumentException("precision < 5 or wordSize < 8 or threads < 2");
+            _precision = precision;
+            _generator = new Random();
+            _size = wordSize;
+            _wait = new AutoResetEvent(false);
+            _threads = threads;
+        }
+
+
+        /// <summary>
+        ///     Primality test.
+        /// </summary>
+        /// <param name="number">number to test</param>
+        /// <returns>true if number is prime</returns>
+        public bool IsPrime(ref BigInteger number)
+        {
+            if (number == 2)
+                return true;
+            if (number.IsEven)
+                return false;
+
+            return number > 2 && MRtest(ref number, new byte[_size], _generator);
+        }
+
+        /// <summary>
+        ///     Return the first prime number following the argument.
+        /// </summary>
+        /// <param name="number">current number</param>
+        /// <returns>next prime number</returns>
+        public BigInteger NextPrime(BigInteger number)
+        {
+            if (number < 2)
+                return 2;
+            if (number.IsEven)
+                number++;
+            _current = number;
+            _continue = true;
+            _pass = 1;
+
+            for (var i = 0; i < _threads; i++) ThreadPool.QueueUserWorkItem(Routine, i);
+
+            _wait.WaitOne();
+            return _current;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool MRpredicate1(ref BigInteger y, ref BigInteger z, ref BigInteger number)
         {
@@ -70,13 +122,13 @@ namespace FiatShamirIdentification
                 return false;
             uint i = 0;
             BigInteger pow2 = 1;
-            bool cond = (BigInteger.ModPow(y, z, number) == number - 1);
+            var cond = BigInteger.ModPow(y, z, number) == number - 1;
 
             while (!cond && i < w)
             {
                 i++;
                 pow2 <<= 1;
-                cond = (BigInteger.ModPow(y, pow2 * z, number) == number - 1);
+                cond = BigInteger.ModPow(y, pow2 * z, number) == number - 1;
             }
 
             return i != w;
@@ -84,13 +136,9 @@ namespace FiatShamirIdentification
 
         private bool MRtest(ref BigInteger number, byte[] buffer, Random generator)
         {
-            uint w;
-            BigInteger z;
+            MRscomposition(ref number, out var w, out var z);
 
-
-            MRscomposition(ref number, out w, out z);
-
-            bool ris = true;
+            var ris = true;
             uint i = 0;
 
             while (_continue && ris && i < _precision)
@@ -106,11 +154,13 @@ namespace FiatShamirIdentification
                     y += generator.Next();
                     y = y % number;
                 }
+
                 //test
-                ris = (BigInteger.GreatestCommonDivisor(y, number) == 1) &&
+                ris = BigInteger.GreatestCommonDivisor(y, number) == 1 &&
                       (MRpredicate1(ref y, ref z, ref number) || MRpredicate2(ref y, ref number, ref z, w));
                 i++;
             }
+
             return ris;
         }
 
@@ -119,7 +169,7 @@ namespace FiatShamirIdentification
         {
             z = number - 1;
             w = 0;
-            while ((z & 1) == 0)
+            while (z.IsEven)
             {
                 w++;
                 z >>= 1;
@@ -127,77 +177,12 @@ namespace FiatShamirIdentification
         }
 
 
-        /// <summary>
-        /// Primality test.
-        /// </summary>
-        /// <param name="number">number to test</param>
-        /// <returns>true if number is prime</returns>
-        public bool IsPrime(ref BigInteger number)
-        {
-            if (number == 2)
-                return true;
-            if ((number & 1) == 0)
-                return false;
-
-            return number > 2 && MRtest(ref number, new byte[_size], _generator);
-        }
-
-        /// <summary>
-        /// Return the first prime number following the argument.
-        /// </summary>
-        /// <param name="number">current number</param>
-        /// <returns>next prime number</returns>
-        public BigInteger NextPrime(BigInteger number)
-        {
-            if (number < 2)
-                return 2;
-            if ((number & 1) == 0)
-                number++;
-            _current = number;
-            _continue = true;
-            _pass = 1;
-
-            for (int i = 0; i < _threads; i++)
-            {
-                ThreadPool.QueueUserWorkItem(Routine, i);
-            }
-
-            _wait.WaitOne();
-            return _current;
-        }
-
-        /// <summary>
-        /// Version to use with threads.
-        /// Return the first prime number following the argument.
-        /// </summary>
-        /// <param name="current">_current number</param>
-        /// <returns>next prime number</returns>
-        public BigInteger NextPrime(object current)
-        {
-            var number = (BigInteger) current;
-            if (number < 2)
-                return 2;
-            if ((number & 1) == 0)
-                number++;
-            _current = number;
-            _continue = true;
-            _pass = 1;
-
-            for (int i = 0; i < _threads; i++)
-            {
-                ThreadPool.QueueUserWorkItem(Routine, i);
-            }
-
-            _wait.WaitOne();
-            return _current;
-        }
-
         //thread's routine
         private void Routine(object threadId)
         {
             var id = (int) threadId;
             var increment = _threads * 2;
-            var number = _current + 2*id;
+            var number = _current + 2 * id;
             var buffer = new byte[_size];
             var generator = new Random(_generator.Next()); //local generator
 

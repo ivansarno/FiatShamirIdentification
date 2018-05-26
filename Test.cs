@@ -15,12 +15,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.1
+//version V.2.2
+
 
 using System;
-using System.IO;
 using System.Numerics;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 
 namespace FiatShamirIdentification
@@ -28,78 +27,26 @@ namespace FiatShamirIdentification
     public class Test
     {
         /// <summary>
-        /// Simple test.
+        ///     Simple test.
         /// </summary>
         /// <param name="wordSize">number of byte of the key</param>
         /// <param name="testPrecision">percision of the test, error = 1/2^precision</param>
         /// <returns>result of the test</returns>
-        public static bool DefaultTest(uint wordSize=128, uint testPrecision=20)
+        public static bool DefaultTestVerbose(uint wordSize = 128, uint testPrecision = 20)
         {
-            if (wordSize < 8 || testPrecision < 1)
+            if (!DefaultTest(wordSize, testPrecision))
             {
-                System.Console.WriteLine("FiatShamirIdentification test invalid input\n");
+                Console.WriteLine("FiatShamirIdentification test ERROR\n");
                 return false;
             }
 
-            uint iteration = 0;
-            bool choice;
-            BigInteger number;
-            bool result = true;
-            var generator = new RNGCryptoServiceProvider();
-            var priv = PrivateKey.NewKey(generator, wordSize);
-            var pub = priv.GetPublicKey();
-            Verifier verifier = pub.GetVerifier();
-            Proover proover = priv.GetProover(generator);
-
-            //test with key
-            while (iteration < testPrecision && result)
-            {
-                number = proover.Step1();
-                choice = verifier.Step1(ref number);
-                number = proover.Step2(choice);
-                verifier.Step2(number);
-                result = verifier.CheckState();
-                iteration++;
-            }
-
-            if (!result) //if not verified, fail
-            {
-                System.Console.WriteLine("FiatShamirIdentification test ERROR\n");
-                generator.Dispose();
-                return false;
-            }
-
-
-            //test without key
-            var genwrap = new GeneratorWrap(generator, wordSize);
-            var falseKey = new PrivateKey(genwrap.GetBig(), genwrap.GetBig(), wordSize);
-            proover = new Proover(falseKey, generator);
-            iteration = 0;
-            while (iteration < testPrecision && result)
-            {
-                number = proover.Step1();
-                choice = verifier.Step1(ref number);
-                number = proover.Step2(choice);
-                verifier.Step2(number);
-                result = verifier.CheckState();
-                iteration++;
-            }
-
-            if (result) //if verified, fail
-            {
-                System.Console.WriteLine("FiatShamirIdentification test ERROR\n");
-                generator.Dispose();
-                return false;
-            }
-
-            System.Console.WriteLine("FiatShamirIdentification test OK\n");
-            generator.Dispose();
+            Console.WriteLine("FiatShamirIdentification test OK\n");
             return true;
         }
 
 
         /// <summary>
-        /// Customizable version with full NewKey parameters.
+        ///     Customizable version with full NewKey parameters.
         /// </summary>
         /// <param name="wordSize">number of byte of the key</param>
         /// <param name="testPrecision">percision of the test, error = 1/2^precision</param>
@@ -107,22 +54,68 @@ namespace FiatShamirIdentification
         /// <param name="generator">random number generator, it is not disposed</param>
         /// <param name="threads">number of threads to use</param>
         /// <returns>result of the test</returns>
-        public static bool CustomTest(uint wordSize, uint testPrecision, uint primePrecision, RandomNumberGenerator generator, ulong primeDistance=uint.MaxValue, int threads = 1)
+        public static bool CustomTestVerbose(uint wordSize, uint testPrecision, uint primePrecision,
+            RandomNumberGenerator generator, int threads = 1)
         {
-            if (wordSize < 8 || testPrecision < 1)
+            if (!CustomTest(wordSize, testPrecision, primePrecision, generator, threads))
             {
-                System.Console.WriteLine("FiatShamirIdentification test invalid input\n");
+                Console.WriteLine("FiatShamirIdentification test ERROR\n");
                 return false;
             }
+
+            Console.WriteLine("FiatShamirIdentification test OK\n");
+            return true;
+        }
+
+        public static bool RepresentationTestVerbose()
+        {
+            if(!RepresentationTest())
+            {
+                Console.WriteLine("Representation Test OK.\n");
+                return true;
+            }
+            Console.WriteLine("Representation Test ERROR.\n");
+            return false;
+        }
+
+        /// <summary>
+        ///     Simple test.
+        /// </summary>
+        /// <param name="wordSize">number of byte of the key</param>
+        /// <param name="testPrecision">percision of the test, error = 1/2^precision</param>
+        /// <returns>result of the test</returns>
+        public static bool DefaultTest(uint wordSize = 128, uint testPrecision = 20)
+        {
+            var generator = new RNGCryptoServiceProvider();
+            var result = CustomTest(wordSize, testPrecision, 20, generator);
+            generator.Dispose();
+            return result;
+        }
+
+
+        /// <summary>
+        ///     Customizable version with full NewKey parameters.
+        /// </summary>
+        /// <param name="wordSize">number of byte of the key</param>
+        /// <param name="testPrecision">percision of the test, error = 1/2^precision</param>
+        /// <param name="primePrecision">percision of primality test, error = 1/2^(2*precision)</param>
+        /// <param name="generator">random number generator, it is not disposed</param>
+        /// <param name="threads">number of threads to use</param>
+        /// <returns>result of the test</returns>
+        public static bool CustomTest(uint wordSize, uint testPrecision, uint primePrecision,
+            RandomNumberGenerator generator, int threads = 1)
+        {
+            if (wordSize < 64 || testPrecision < 1)
+                throw new ArgumentNullException("FiatShamirIdentification test invalid input\n");
 
             uint iteration = 0;
             bool choice;
             BigInteger number;
-            bool result = true;
+            var result = true;
             var priv = PrivateKey.NewKey(generator, wordSize, threads, primePrecision);
             var pub = priv.GetPublicKey();
-            Verifier verifier = pub.GetVerifier();
-            Proover proover = priv.GetProover(generator);
+            var verifier = pub.GetVerifier();
+            var proover = priv.GetProover(generator);
 
             //test with key
             while (iteration < testPrecision && result)
@@ -136,10 +129,7 @@ namespace FiatShamirIdentification
             }
 
             if (!result) //if not verified, fail
-            {
-                System.Console.WriteLine("FiatShamirIdentification test ERROR\n");
                 return false;
-            }
 
 
             //test without key
@@ -157,14 +147,7 @@ namespace FiatShamirIdentification
                 iteration++;
             }
 
-            if (result) //if verified, fail
-            {
-                System.Console.WriteLine("FiatShamirIdentification test ERROR\n");
-                return false;
-            }
-
-            System.Console.WriteLine("FiatShamirIdentification test OK\n");
-            return true;
+            return !result;
         }
 
         public static bool RepresentationTest()
@@ -172,23 +155,12 @@ namespace FiatShamirIdentification
             var originalPriv = PrivateKey.NewKey(new RNGCryptoServiceProvider());
             var newPriv = PrivateKey.ResumeKey(originalPriv.SaveKey());
 
-            if (!PrivateKey.EqTest(originalPriv, newPriv))
-            {
-                System.Console.WriteLine("Representation Test ERROR: PrivateKey problem.\n");
-                return false;
-            }
+            if (originalPriv != newPriv) return false;
 
             var originalPub = originalPriv.GetPublicKey();
             var newPub = PublicKey.ResumeKey(originalPub.SaveKey());
 
-            if (!PublicKey.EqTest(originalPub, newPub))
-            {
-                System.Console.WriteLine("Representation Test ERROR: PublicKey problem.\n");
-                return false;
-            }
-
-            System.Console.WriteLine("Representation Test OK.\n");
-            return true;
+            return originalPub == newPub;
         }
     }
 }

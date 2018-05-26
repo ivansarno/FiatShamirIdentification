@@ -15,35 +15,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.1
+//version V.2.2
 
 using System.Numerics;
 
 namespace FiatShamirIdentification
 {
     /// <summary>
-    /// Utility for prime numbers.
-    /// for internal use.
+    ///     Utility for prime numbers.
+    ///     for internal use.
     /// </summary>
     internal interface IPrime
     {
         /// <summary>
-        /// Version to use with threads.
-        /// Return the first prime number following the argument.
-        /// </summary>
-        /// <param name="current">current number</param>
-        /// <returns>next prime number</returns>
-        BigInteger NextPrime(object current);
-
-        /// <summary>
-        /// Return the first prime number following the argument.
+        ///     Return the first prime number following the argument.
         /// </summary>
         /// <param name="number">current number</param>
         /// <returns>next prime number</returns>
         BigInteger NextPrime(BigInteger number);
 
         /// <summary>
-        /// Primality test.
+        ///     Primality test.
         /// </summary>
         /// <param name="number">number to test</param>
         /// <returns>true if number is prime</returns>

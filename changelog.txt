@@ -1,3 +1,10 @@
+Version 2.2
+Version not backward compatible 
+
+1)Keys creation from a secret number
+2)Keys implements IEquatable
+3)Non verbose test version
+
 Version 2.1.1
 
 Serializable keys

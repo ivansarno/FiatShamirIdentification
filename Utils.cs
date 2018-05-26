@@ -15,20 +15,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.1
+//version V.2.2
 
 using System;
 using System.Numerics;
 using System.Security.Cryptography;
 
-
 namespace FiatShamirIdentification
 {
     internal sealed class GeneratorWrap
     {
-        private readonly RandomNumberGenerator _gen;
         private readonly byte[] _buffer;
-        public uint Size { get;}
+        private readonly RandomNumberGenerator _gen;
 
         public GeneratorWrap(RandomNumberGenerator generator, uint wordSize)
         {
@@ -37,10 +35,12 @@ namespace FiatShamirIdentification
             _buffer = new byte[wordSize];
         }
 
+        public uint Size { get; }
+
         public BigInteger GetBig()
         {
             _gen.GetBytes(_buffer);
-            _buffer[Size-1] &= 127; //forces a positive number
+            _buffer[Size - 1] &= 127; //forces a positive number
             return new BigInteger(_buffer);
         }
 

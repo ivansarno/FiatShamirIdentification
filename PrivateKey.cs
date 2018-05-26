@@ -15,46 +15,52 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//version V.2.1
+//version V.2.2
 
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
-
 namespace FiatShamirIdentification
 {
     [Serializable]
-    public sealed class PrivateKey
+    public sealed class PrivateKey : IEquatable<PrivateKey>
     {
-        private readonly BigInteger _key;
-        private readonly BigInteger _modulus;
-        private readonly uint _size;
-
         internal PrivateKey(BigInteger key, BigInteger modulus, uint size)
         {
-            _key = key;
-            _modulus = modulus;
-            _size = size; 
+            Key = key;
+            Modulus = modulus;
+            Size = size;
         }
 
-        internal BigInteger Key => _key;
-        internal uint Size => _size;
-        internal BigInteger Modulus => _modulus;
+        internal BigInteger Key { get; }
+
+        internal uint Size { get; }
+
+        internal BigInteger Modulus { get; }
+
+        public bool Equals(PrivateKey other)
+        {
+            return other != null &&
+                   Key.Equals(other.Key) &&
+                   Modulus.Equals(other.Modulus) &&
+                   Size == other.Size;
+        }
 
         /// <summary>
-        /// Return the PublicKey associated at this PrivateKey to send to servers for the Identifications.
+        ///     Return the PublicKey associated at this PrivateKey to send to servers for the Identifications.
         /// </summary>
         /// <returns>PublicKey associated at this PrivateKey</returns>
         public PublicKey GetPublicKey()
         {
-            return new PublicKey(_key*_key%_modulus, _modulus);
+            return new PublicKey(Key * Key % Modulus, Modulus, Size);
         }
 
         /// <summary>
-        /// Return the Proover associated at this PrivateKey to an identification session.
+        ///     Return the Proover associated at this PrivateKey to an identification session.
         /// </summary>
         /// <returns>Proover associated at this PrivateKey</returns>
         public Proover GetProover(RandomNumberGenerator gen)
@@ -64,7 +70,7 @@ namespace FiatShamirIdentification
 
 
         /// <summary>
-        /// Create a new PrivateKey
+        ///     Create a new PrivateKey
         /// </summary>
         /// <param name="gen">secure random number generation</param>
         /// <param name="wordSize">length in bytes of the key's modulus</param>
@@ -74,17 +80,44 @@ namespace FiatShamirIdentification
         public static PrivateKey NewKey(RandomNumberGenerator gen, uint wordSize = 128, int threads = 2,
             uint precision = 20)
         {
-            if (precision < 1 || wordSize < 8 || gen == null)
-                throw new ArgumentException("precision < 1 or wordSize < 8 or gen == null");
+            if (precision < 1 || wordSize < 64 || gen == null)
+                throw new ArgumentException("precision < 1 or wordSize < 64 or gen == null");
 
             BigInteger modulus;
             if (threads < 2)
-                modulus = SeqGenMod(new GeneratorWrap(gen, wordSize/2), wordSize, precision);
-            else modulus = ParGenMod(new GeneratorWrap(gen, wordSize/2), wordSize, threads, precision);
+                modulus = SeqGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, precision);
+            else modulus = ParGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, threads, precision);
 
             var key = GenKey(new GeneratorWrap(gen, wordSize), modulus);
 
             return new PrivateKey(key, modulus, wordSize);
+        }
+
+        /// <summary>
+        ///     Create a new PrivateKey from a secret number.
+        /// </summary>
+        /// <param name="secretNumber">user's secret number to use to in key creation</param>
+        /// <param name="gen">secure random number generation</param>
+        /// <param name="wordSize">length in bytes of the key's modulus</param>
+        /// <param name="threads">number of threads to use for the generation</param>
+        /// <param name="precision">precision of primality test, error=1/2^(2*precision)</param>
+        /// <returns>new private key</returns>
+        public static PrivateKey NewKey(BigInteger secretNumber, RandomNumberGenerator gen, uint wordSize = 128,
+            int threads = 2,
+            uint precision = 20)
+        {
+            if (precision < 1 || wordSize < 64 || gen == null)
+                throw new ArgumentException("precision < 1 or wordSize < 64 or gen == null");
+
+            if (secretNumber < ulong.MaxValue)
+                throw new ArgumentException("secret number < UInt64.MaxValue");
+
+            BigInteger modulus;
+            if (threads < 2)
+                modulus = SeqGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, precision);
+            else modulus = ParGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, threads, precision);
+
+            return new PrivateKey(secretNumber, modulus, wordSize);
         }
 
         //Generates the modulus using one thread
@@ -94,10 +127,7 @@ namespace FiatShamirIdentification
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
 
-            while (!SecurityCheck(firstPrime, secondPrime))
-            {
-                secondPrime = gen.GetBig();
-            }
+            while (!SecurityCheck(firstPrime, secondPrime)) secondPrime = gen.GetBig();
 
             firstPrime = generator.NextPrime(firstPrime);
             secondPrime = generator.NextPrime(secondPrime);
@@ -124,12 +154,9 @@ namespace FiatShamirIdentification
             //primes creation
             var firstPrime = gen.GetBig();
             var secondPrime = gen.GetBig();
-            while (!SecurityCheck(firstPrime, secondPrime))
-            {
-                secondPrime = gen.GetBig();
-            }
+            while (!SecurityCheck(firstPrime, secondPrime)) secondPrime = gen.GetBig();
 
-            Task<BigInteger> worker = new Task<BigInteger>(workerGenerator.NextPrime, firstPrime);
+            var worker = new Task<BigInteger>(() => workerGenerator.NextPrime(firstPrime));
             worker.Start();
             secondPrime = mainGenerator.NextPrime(secondPrime);
 
@@ -137,55 +164,51 @@ namespace FiatShamirIdentification
             firstPrime = worker.Result;
             worker.Dispose();
 
-            return firstPrime*secondPrime;
+            return firstPrime * secondPrime;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static BigInteger GenKey(GeneratorWrap gen, BigInteger modulus)
         {
-            var key = gen.GetBig()%modulus;
-            while (key * key % modulus < 2)//avoid private key or public key == 0 or == 1
-            {
+            var key = gen.GetBig() % modulus;
+            while (key * key % modulus < ulong.MaxValue) //avoid private key or public key == 0 or == 1
                 key = gen.GetBig() % modulus;
-            }
             return key;
         }
 
         //checks whether the numbers found to comply with safety conditions
         private static bool SecurityCheck(BigInteger first, BigInteger second)
         {
-            var distance = BigInteger.Pow(first-second, 4);
+            var distance = BigInteger.Pow(first - second, 4);
             var modulus = first * second;
-            if(modulus >= distance)
+            if (modulus >= distance)
                 return false;
-                
+
             distance = BigInteger.Abs(modulus - BigInteger.Pow(first, 2));
-            if(distance < Int32.MaxValue)
+            if (distance < uint.MaxValue)
                 return false;
-                
+
             distance = BigInteger.Abs(modulus - BigInteger.Pow(second, 2));
-            if(distance < int.MaxValue)
-                return false;
-            return true;
+            return distance >= uint.MaxValue;
         }
 
         /// <summary>
-        /// Return a binary representation of the PrivateKey.
-        /// User can use this to restore the key with ResumeKey method.
+        ///     Return a binary representation of the PrivateKey.
+        ///     User can use this to restore the key with ResumeKey method.
         /// </summary>
         /// <returns>bytes array represented the PrivateKey</returns>
         public byte[] SaveKey()
         {
-            var key = _key.ToByteArray();
-            var modulus = _modulus.ToByteArray();
-            var length = BitConverter.GetBytes(key.Length).Concat(BitConverter.GetBytes(_size));
+            var key = Key.ToByteArray();
+            var modulus = Modulus.ToByteArray();
+            var length = BitConverter.GetBytes(key.Length).Concat(BitConverter.GetBytes(Size));
             return length.Concat(key, modulus);
         }
 
 
         /// <summary>
-        /// Convert a bytes array represented a PrivateKey to a PrivateKey.
-        /// This method restore a PrivateKey exported with SaveKey method
+        ///     Convert a bytes array represented a PrivateKey to a PrivateKey.
+        ///     This method restore a PrivateKey exported with SaveKey method
         /// </summary>
         /// <param name="rawKey">bytes array represented a PrivateKey</param>
         /// <exception cref="ArgumentException">the bytes array not represents a PrivateKey</exception>
@@ -196,19 +219,28 @@ namespace FiatShamirIdentification
             {
                 var length = BitConverter.ToInt32(rawKey, 0);
                 var wordSize = BitConverter.ToUInt32(rawKey, 4);
-                return new PrivateKey(new BigInteger(rawKey.Slice(8, 8 + length)), new BigInteger(rawKey.Slice(8 + length)), wordSize);
+                return new PrivateKey(new BigInteger(rawKey.Slice(8, 8 + length)),
+                    new BigInteger(rawKey.Slice(8 + length)), wordSize);
             }
             catch (ArgumentException)
             {
-
                 throw new ArgumentException("rawKey bytes array not represents a PrivateKey");
             }
         }
 
-        //only for test
-        internal static bool EqTest(PrivateKey first, PrivateKey second)
+        public override bool Equals(object obj)
         {
-            return first._key == second._key && first._modulus == second._modulus;
+            return Equals(obj as PrivateKey);
+        }
+
+        public static bool operator ==(PrivateKey key1, PrivateKey key2)
+        {
+            return EqualityComparer<PrivateKey>.Default.Equals(key1, key2);
+        }
+
+        public static bool operator !=(PrivateKey key1, PrivateKey key2)
+        {
+            return !(key1 == key2);
         }
     }
 }
