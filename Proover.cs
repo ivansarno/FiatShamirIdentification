@@ -54,11 +54,19 @@ namespace FiatShamirIdentification
         /// <returns>number to send to Verifier</returns>
         public BigInteger Step1()
         {
-            _sessionNumber = _generator.GetBig() % _key.Modulus;
             _synch = true;
-            while (_sessionNumber < ulong.MaxValue) //avoid comunication of the key
+            _sessionNumber = _generator.GetBig() % _key.Modulus;
+            var square = _sessionNumber * _sessionNumber;
+            var squareMod = square % _key.Modulus;
+            //avoid comunication of the key
+            while (_sessionNumber < 3 && 1 != BigInteger.GreatestCommonDivisor(_sessionNumber, _key.Modulus) &&
+                   1 != BigInteger.GreatestCommonDivisor(squareMod, _key.Modulus) && square == squareMod)
+            {
                 _sessionNumber = _generator.GetBig() % _key.Modulus;
-            return _sessionNumber * _sessionNumber % _key.Modulus;
+                square = _sessionNumber * _sessionNumber;
+                squareMod = square % _key.Modulus;
+            }
+            return squareMod;
         }
 
 

@@ -78,11 +78,12 @@ namespace FiatShamirIdentification
         /// <param name="precision">precision of primality test, error=1/2^(2*precision)</param>
         /// <returns>new private key</returns>
         public static PrivateKey NewKey(RandomNumberGenerator gen, uint wordSize = 128, int threads = 2,
-            uint precision = 20)
+            uint precision = 60)
         {
-            if (precision < 1 || wordSize < 64 || gen == null)
-                throw new ArgumentException("precision < 1 or wordSize < 64 or gen == null");
-
+            if (wordSize < 128 || gen == null)
+                throw new ArgumentException("wordSize < 128 or gen == null");
+            
+            precision = Math.Max(precision, 60); 
             BigInteger modulus;
             if (threads < 2)
                 modulus = SeqGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, precision);
@@ -103,20 +104,20 @@ namespace FiatShamirIdentification
         /// <param name="precision">precision of primality test, error=1/2^(2*precision)</param>
         /// <returns>new private key</returns>
         public static PrivateKey NewKey(BigInteger secretNumber, RandomNumberGenerator gen, uint wordSize = 128,
-            int threads = 2,
-            uint precision = 20)
+            int threads = 2, uint precision = 60)
         {
-            if (precision < 1 || wordSize < 64 || gen == null)
-                throw new ArgumentException("precision < 1 or wordSize < 64 or gen == null");
+            if (wordSize < 128 || gen == null)
+                throw new ArgumentException("wordSize < 128 or gen == null");
 
-            if (secretNumber < ulong.MaxValue)
-                throw new ArgumentException("secret number < UInt64.MaxValue");
-
+            precision = Math.Max(precision, 60); 
             BigInteger modulus;
             if (threads < 2)
                 modulus = SeqGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, precision);
             else modulus = ParGenMod(new GeneratorWrap(gen, wordSize / 2), wordSize, threads, precision);
-
+            
+            if (!KeyCheck(secretNumber, modulus))
+                throw new ArgumentException("secret number < UInt64.MaxValue");
+            
             return new PrivateKey(secretNumber, modulus, wordSize);
         }
 
@@ -171,8 +172,10 @@ namespace FiatShamirIdentification
         private static BigInteger GenKey(GeneratorWrap gen, BigInteger modulus)
         {
             var key = gen.GetBig() % modulus;
-            while (key * key % modulus < ulong.MaxValue) //avoid private key or public key == 0 or == 1
+            while (!KeyCheck(key, modulus))
+            {
                 key = gen.GetBig() % modulus;
+            }
             return key;
         }
 
@@ -190,6 +193,15 @@ namespace FiatShamirIdentification
 
             distance = BigInteger.Abs(modulus - BigInteger.Pow(second, 2));
             return distance >= uint.MaxValue;
+        }
+        
+        //checks the key to comply with safety conditions
+        private static bool KeyCheck(BigInteger key, BigInteger modulus)
+        {
+            var square = key * key;
+            var squareMod = square % modulus;
+            return key > 3 && BigInteger.GreatestCommonDivisor(squareMod, modulus) == 1 &&
+                BigInteger.GreatestCommonDivisor(key, modulus) == 1 && square != squareMod;
         }
 
         /// <summary>

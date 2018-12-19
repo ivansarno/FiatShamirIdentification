@@ -87,7 +87,7 @@ namespace FiatShamirIdentification
         public static bool DefaultTest(uint wordSize = 128, uint testPrecision = 20)
         {
             var generator = new RNGCryptoServiceProvider();
-            var result = CustomTest(wordSize, testPrecision, 20, generator);
+            var result = CustomTest(wordSize, testPrecision, 60, generator);
             generator.Dispose();
             return result;
         }
@@ -105,7 +105,7 @@ namespace FiatShamirIdentification
         public static bool CustomTest(uint wordSize, uint testPrecision, uint primePrecision,
             RandomNumberGenerator generator, int threads = 1)
         {
-            if (wordSize < 64 || testPrecision < 1)
+            if (wordSize < 128 || testPrecision < 1)
                 throw new ArgumentNullException("FiatShamirIdentification test invalid input\n");
 
             uint iteration = 0;
