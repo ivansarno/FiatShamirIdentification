@@ -1,7 +1,7 @@
 # FiatShamirIdentification
 C# OOP implementation of Fiat Shamir Identification Scheme
 
-**This project was designed for learning purposes, its use in real systems is not recommended. This project is not updated regularly.**
+**This project was designed for learning purposes, its use in real systems is not recommended. This project will no longer be updated.**
 
 Library includes the classes:
 
